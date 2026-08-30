@@ -50,4 +50,5 @@ def __char_operation(char1: str, char2: str, operation: Callable[[int, int], int
     Applies the given operation to the Unicode code points
     of char1 and char2 and returns the resulting character.
     """
-    return chr(operation(ord(char1), ord(char2)))
+    unicode_limit = 0x110000
+    return chr(operation(ord(char1), ord(char2)) % unicode_limit)
