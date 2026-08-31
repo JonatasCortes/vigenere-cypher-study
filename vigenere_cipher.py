@@ -76,3 +76,19 @@ def __normalize_letter(raw_letter: str) -> str:
     without_accents = next(l for l in letter_components
                            if not combining(l))
     return without_accents.upper()
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Cifra de Vigenère")
+    parser.add_argument("modo", choices=["enc", "dec"], help="Modo: 'enc' para encriptar ou 'dec' para decriptar")
+    parser.add_argument("chave", help="Chave de cifragem")
+    parser.add_argument("texto", help="Texto a ser processado")
+    args = parser.parse_args()
+
+    if args.modo == "enc":
+        print(encrypt(args.chave, args.texto))
+    else:
+        print(decrypt(args.chave, args.texto))
+
