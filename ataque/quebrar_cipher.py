@@ -1,6 +1,6 @@
 from collections import Counter
 
-from utils import ALFABETO, FREQ_EN, FREQ_PT
+from ataque.utils import ALFABETO, FREQ_EN, FREQ_PT
 
 
 def decifrar_deslocamento(texto, deslocamento):

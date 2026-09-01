@@ -1,8 +1,9 @@
 import argparse
 
-from quebrar_cipher import descobrir_chave, reduzir_chave_repetida
-from estimar_chave import estimar_chave
-from utils import decriptar_vigenere, normalizar_texto
+from ataque.estimar_chave import estimar_chave
+from ataque.quebrar_cipher import descobrir_chave, reduzir_chave_repetida
+from ataque.utils import normalizar_texto
+from vigenere_cipher import decrypt
 
 
 TAMANHO_PREVIA = 200
@@ -28,7 +29,7 @@ def selecionar_candidato(candidatos, criptograma):
     while True:
         candidato = candidatos[indice_selecionado]
         chave = candidato[2]
-        texto_decifrado = decriptar_vigenere(chave, criptograma)
+        texto_decifrado = decrypt(chave, criptograma)
 
         print()
         print(
@@ -59,6 +60,35 @@ def selecionar_candidato(candidatos, criptograma):
                 f"Escolha um número de 1 a {len(candidatos)} "
                 "ou A para aceitar."
             )
+
+
+def analisar_criptograma(criptograma, idioma, maximo_chave):
+    resultados = estimar_chave(criptograma, maximo_chave)
+    resultados_ordenados = sorted(
+        resultados,
+        key=lambda x: x[1],
+        reverse=True,
+    )
+
+    candidatos_chave = []
+
+    for tamanho, ic in resultados_ordenados:
+        chave = descobrir_chave(
+            criptograma,
+            tamanho,
+            idioma,
+        )
+        chave = reduzir_chave_repetida(chave)
+
+        candidatos_chave.append(
+            (tamanho, ic, chave),
+        )
+
+    return sorted(
+        candidatos_chave,
+        key=lambda x: x[1],
+        reverse=True,
+    )
 
 
 def main():
@@ -96,32 +126,10 @@ def main():
     with open(args.arquivo, "r", encoding="utf-8", newline="") as arquivo:
         criptograma = normalizar_texto(arquivo.read())
 
-    resultados = estimar_chave(criptograma, args.max_chave)
-
-    resultados_ordenados = sorted(
-        resultados,
-        key=lambda x: x[1],
-        reverse=True,
-    )
-
-    candidatos_chave = []
-
-    for tamanho, ic in resultados_ordenados:
-        chave = descobrir_chave(
-            criptograma,
-            tamanho,
-            args.idioma,
-        )
-        chave = reduzir_chave_repetida(chave)
-
-        candidatos_chave.append(
-            (tamanho, ic, chave),
-        )
-
-    chaves_sorted = sorted(
-        candidatos_chave,
-        key=lambda x: x[1],
-        reverse=True,
+    chaves_sorted = analisar_criptograma(
+        criptograma,
+        args.idioma,
+        args.max_chave,
     )
 
     melhores_candidatos = chaves_sorted[:LIMITE_CANDIDATOS]
@@ -138,7 +146,7 @@ def main():
     print()
     print("Chave estimada:", chave_final[2])
     print()
-    print(decriptar_vigenere(chave_final[2], criptograma))
+    print(decrypt(chave_final[2], criptograma))
 
 
 if __name__ == "__main__":

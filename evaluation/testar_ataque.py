@@ -1,9 +1,11 @@
 import argparse
+from pathlib import Path
 
-from gerar_casos import gerar_casos
-from main import analisar_criptograma
-from quebrar_cipher import reduzir_chave_repetida
-from utils import ALFABETO, decriptar_vigenere
+from ataque.main import analisar_criptograma
+from ataque.quebrar_cipher import reduzir_chave_repetida
+from ataque.utils import ALFABETO
+from evaluation.gerar_casos import gerar_casos
+from vigenere_cipher import decrypt
 
 
 def contar_letras(texto):
@@ -15,7 +17,7 @@ def encontrar_candidato_correto(caso, candidatos):
 
     for posicao, candidato in enumerate(candidatos, start=1):
         chave_encontrada = candidato[2]
-        texto_encontrado = decriptar_vigenere(
+        texto_encontrado = decrypt(
             chave_encontrada,
             caso["criptograma"],
         )
@@ -36,8 +38,8 @@ def main():
     parser.add_argument(
         "arquivo",
         nargs="?",
-        default="quincas.txt",
-        help="texto usado para gerar os casos (padrão: quincas.txt)",
+        default=str(Path(__file__).with_name("quincas.txt")),
+        help="texto usado para gerar os casos (padrão: evaluation/quincas.txt)",
     )
     parser.add_argument(
         "--casos",

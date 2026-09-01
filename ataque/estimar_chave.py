@@ -1,6 +1,6 @@
 from collections import Counter
 
-from utils import ALFABETO
+from ataque.utils import ALFABETO
 
 
 def indice_de_coincidencia(texto):

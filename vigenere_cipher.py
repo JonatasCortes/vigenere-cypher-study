@@ -1,7 +1,9 @@
 from unicodedata import normalize, combining
 from typing import Callable
-from math import ceil
 from operator import add, sub
+
+
+ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 def encrypt(key: str, plaintext: str) -> str:
@@ -25,13 +27,22 @@ def __vigenere_cipher(text: str, key: str, operation: Callable[[int, int], int])
     Transforms the given text using the provided key and operation.
     Non-alphabetic characters from the text are preserved unchanged.
     """
-    full_key: str = __expand_key(key, text)
-    return __cipher_text_with_key(text, full_key, operation)
+    normalized_text: str = __normalize_text(text)
+    normalized_key: str = __normalize_key(key)
+    return __cipher_text_with_key(normalized_text, normalized_key, operation)
 
 
-def __expand_key(key: str, text: str) -> str:
-    """Repeats the given key until it matches the length of the text."""
-    return ceil(len(text) / len(key)) * key
+def __normalize_key(key: str) -> str:
+    """Returns a non-empty key containing only normalized A-Z letters."""
+    normalized_key: str = __normalize_text(key)
+
+    if not normalized_key:
+        raise ValueError("a chave não pode ser vazia")
+
+    if any(char not in ALPHABET for char in normalized_key):
+        raise ValueError("a chave deve conter apenas letras de A a Z")
+
+    return normalized_key
 
 
 def __cipher_text_with_key(text: str, key: str, operation: Callable[[int, int], int]) -> str:
@@ -41,19 +52,19 @@ def __cipher_text_with_key(text: str, key: str, operation: Callable[[int, int], 
     0 to 25, and must return an integer value. Non-letter characters from `text` are
     preserved unchanged.
     """
-    return "".join(__apply_operation_if_alpha(char1, char2, operation)
-                   for char1, char2 in zip(text, key))
+    result: list[str] = []
+    key_index: int = 0
 
+    for text_char in text:
+        if text_char not in ALPHABET:
+            result.append(text_char)
+            continue
 
-def __apply_operation_if_alpha(text_char: str, key_char: str, operation: Callable[[int, int], int]) -> str:
-    """
-    Applies the given operation to text_char and key_char when
-    both are alphabetic. If either character is not alphabetic,
-    text_char is returned unchanged.
-    """
-    if text_char.isalpha() and key_char.isalpha():
-        return __letter_operation(text_char, key_char, operation)
-    return text_char
+        key_char: str = key[key_index % len(key)]
+        result.append(__letter_operation(text_char, key_char, operation))
+        key_index += 1
+
+    return "".join(result)
 
 
 def __letter_operation(letter1: str, letter2: str, operation: Callable[[int, int], int]) -> str:
@@ -65,17 +76,35 @@ def __letter_operation(letter1: str, letter2: str, operation: Callable[[int, int
     """
     offset = ord("A")
     alphabet_range = 26
-    result = operation(ord(__normalize_letter(letter1)) - offset,
-                       ord(__normalize_letter(letter2)) - offset)
+    result = operation(ord(letter1) - offset,
+                       ord(letter2) - offset)
     return chr((result % alphabet_range) + offset)
 
 
-def __normalize_letter(raw_letter: str) -> str:
-    """Returns the uppercase, accent-free form of the given letter."""
-    letter_components = normalize('NFD', raw_letter)
-    without_accents = next(l for l in letter_components
-                           if not combining(l))
-    return without_accents.upper()
+def __normalize_text(text: str) -> str:
+    """Normalizes convertible letters to A-Z and preserves other characters."""
+    composed_text: str = normalize("NFC", text)
+    result: list[str] = []
+
+    for char in composed_text:
+        if not char.isalpha():
+            result.append(char)
+            continue
+
+        normalized_char: str = "".join(
+            component
+            for component in normalize("NFD", char.upper())
+            if not combining(component)
+        )
+
+        if normalized_char and all(
+            component in ALPHABET for component in normalized_char
+        ):
+            result.extend(normalized_char)
+        else:
+            result.append(char)
+
+    return "".join(result)
 
 
 if __name__ == "__main__":
@@ -91,4 +120,3 @@ if __name__ == "__main__":
         print(encrypt(args.chave, args.texto))
     else:
         print(decrypt(args.chave, args.texto))
-

@@ -127,7 +127,3 @@ def transformar_vigenere(texto, chave, direcao):
 
 def encriptar_vigenere(chave, texto):
     return transformar_vigenere(normalizar_texto(texto), chave, 1)
-
-
-def decriptar_vigenere(chave, texto):
-    return transformar_vigenere(normalizar_texto(texto), chave, -1)
