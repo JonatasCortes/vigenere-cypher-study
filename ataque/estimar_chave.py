@@ -4,6 +4,7 @@ from ataque.utils import ALFABETO
 
 
 def indice_de_coincidencia(texto):
+    """Calcula a probabilidade de duas posições distintas conterem a mesma letra."""
     n = len(texto)
 
     if n < 2:
@@ -22,10 +23,12 @@ def indice_de_coincidencia(texto):
 
 
 def estimar_chave(texto, maximo_k):
+    """Retorna o IC médio das colunas para cada tamanho de chave candidato."""
     letras = ''.join(caractere for caractere in texto if caractere in ALFABETO)
     resultados = []
 
     for k in range(1, maximo_k + 1):
+        # Cada coluna reúne letras cifradas pela mesma posição periódica da chave.
         colunas = [letras[i::k] for i in range(k)]
 
         indice_colunas = [

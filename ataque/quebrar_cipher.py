@@ -30,7 +30,7 @@ def chi_quadrado(texto, frequencias=FREQ_PT):
 def descobrir_caractere_chave(texto, frequencias=FREQ_PT):
     melhor_deslocamento = 0
     melhor_x2 = float('inf')
-
+    # Cada deslocamento representa uma possível letra da chave nesta coluna.
     for deslocamento in range(len(ALFABETO)):
         candidato = decifrar_deslocamento(texto, deslocamento)
         x2 = chi_quadrado(candidato, frequencias)
@@ -56,6 +56,7 @@ def descobrir_chave(texto, tamanho_chave, idioma="pt"):
     except KeyError as erro:
         raise ValueError("idioma deve ser 'pt' ou 'en'") from erro
 
+    # Caracteres ignorados pelo cifrador também não participam das colunas.
     letras = ''.join(caractere for caractere in texto if caractere in ALFABETO)
     chave = []
 
@@ -72,6 +73,7 @@ def descobrir_chave(texto, tamanho_chave, idioma="pt"):
 
 
 def reduzir_chave_repetida(chave):
+    """Reduz uma chave periódica ao seu menor período equivalente."""
     for tamanho in range(1, len(chave) + 1):
         if len(chave) % tamanho != 0:
             continue

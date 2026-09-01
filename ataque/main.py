@@ -72,6 +72,7 @@ def analisar_criptograma(criptograma, idioma, maximo_chave):
 
     candidatos_chave = []
 
+    # O IC ranqueia os tamanhos; a frequência reconstrói uma chave para cada um.
     for tamanho, ic in resultados_ordenados:
         chave = descobrir_chave(
             criptograma,
