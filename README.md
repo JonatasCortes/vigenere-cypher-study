@@ -13,6 +13,12 @@ python3 vigenere_cipher.py enc CHAVE "Mensagem de teste"
 
 # Desencriptar
 python3 vigenere_cipher.py dec CHAVE "VLXOS FL TZWVL"
+
+# Encriptar um arquivo e salvar o resultado
+python3 vigenere_cipher.py enc CHAVE --arquivo mensagem.txt --saida criptograma.txt
+
+# Desencriptar um arquivo (o resultado é exibido no terminal)
+python3 vigenere_cipher.py dec CHAVE --arquivo criptograma.txt
 ```
 
 **Via Python:**
@@ -21,6 +27,13 @@ from vigenere_cipher import encrypt, decrypt
 
 criptograma = encrypt("CHAVE", "Mensagem de teste")
 original = decrypt("CHAVE", criptograma)
+
+# Também é possível fornecer um Path ou um arquivo de texto aberto
+from pathlib import Path
+
+criptograma = encrypt("CHAVE", Path("mensagem.txt"))
+with open("criptograma.txt", "r", encoding="utf-8") as arquivo:
+    original = decrypt("CHAVE", arquivo)
 ```
 
 ### 2. Ataque / Criptoanálise (CLI)

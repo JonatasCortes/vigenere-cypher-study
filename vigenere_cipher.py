@@ -1,25 +1,51 @@
 from unicodedata import normalize, combining
-from typing import Callable
+from os import PathLike
+from typing import Callable, TextIO, Union
 from operator import add, sub
 
 
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+TextInput = Union[str, PathLike, TextIO]
 
 
-def encrypt(key: str, plaintext: str) -> str:
+def encrypt(key: str, plaintext: TextInput) -> str:
     """
-    Encrypts the given plaintext using the provided
-    key and returns the resulting ciphertext.
+    Encrypts text using the provided key and returns the ciphertext.
+
+    ``plaintext`` may be a string, a path-like object or an open text file.
+    Paths and files are read as UTF-8 text. Open files are not closed by this
+    function because their lifecycle belongs to the caller.
     """
-    return __vigenere_cipher(plaintext, key, add)
+    return __vigenere_cipher(__read_text_input(plaintext), key, add)
 
 
-def decrypt(key: str, ciphertext: str) -> str:
+def decrypt(key: str, ciphertext: TextInput) -> str:
     """
-    Decrypts the given ciphertext using the provided
-    key and returns the resulting plaintext.
+    Decrypts text using the provided key and returns the plaintext.
+
+    ``ciphertext`` may be a string, a path-like object or an open text file.
+    Paths and files are read as UTF-8 text. Open files are not closed by this
+    function because their lifecycle belongs to the caller.
     """
-    return __vigenere_cipher(ciphertext, key, sub)
+    return __vigenere_cipher(__read_text_input(ciphertext), key, sub)
+
+
+def __read_text_input(source: TextInput) -> str:
+    """Returns text supplied directly, through a path or through a text file."""
+    if isinstance(source, str):
+        return source
+
+    if isinstance(source, PathLike):
+        with open(source, "r", encoding="utf-8", newline="") as input_file:
+            return input_file.read()
+
+    if hasattr(source, "read"):
+        text = source.read()
+        if not isinstance(text, str):
+            raise TypeError("o arquivo deve estar aberto em modo texto")
+        return text
+
+    raise TypeError("o texto deve ser uma string, um caminho ou um arquivo de texto")
 
 
 def __vigenere_cipher(text: str, key: str, operation: Callable[[int, int], int]) -> str:
@@ -109,14 +135,34 @@ def __normalize_text(text: str) -> str:
 
 if __name__ == "__main__":
     import argparse
+    from pathlib import Path
 
     parser = argparse.ArgumentParser(description="Cifra de Vigenère")
     parser.add_argument("modo", choices=["enc", "dec"], help="Modo: 'enc' para encriptar ou 'dec' para decriptar")
     parser.add_argument("chave", help="Chave de cifragem")
-    parser.add_argument("texto", help="Texto a ser processado")
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument("texto", nargs="?", help="Texto a ser processado")
+    input_group.add_argument(
+        "-f",
+        "--arquivo",
+        type=Path,
+        help="Arquivo UTF-8 a ser processado",
+    )
+    parser.add_argument(
+        "-o",
+        "--saida",
+        type=Path,
+        help="Salva o resultado neste arquivo em vez de exibi-lo",
+    )
     args = parser.parse_args()
 
+    source = args.arquivo if args.arquivo is not None else args.texto
     if args.modo == "enc":
-        print(encrypt(args.chave, args.texto))
+        result = encrypt(args.chave, source)
     else:
-        print(decrypt(args.chave, args.texto))
+        result = decrypt(args.chave, source)
+
+    if args.saida is not None:
+        args.saida.write_text(result, encoding="utf-8", newline="")
+    else:
+        print(result)
